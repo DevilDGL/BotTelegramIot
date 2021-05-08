@@ -51,14 +51,14 @@ class TilaAgent(Agent):
         """ Show commands related to the leds
         """
         markup = types.ReplyKeyboardMarkup()
-        led_status = types.InlineKeyboardButton('/get-led-status')
-        led_on = types.InlineKeyboardButton('/turn-led-on')
-        led_off = types.InlineKeyboardButton('/turn-led-off')
+        led_status = types.InlineKeyboardButton('/get_led_status')
+        led_on = types.InlineKeyboardButton('/turn_led_on')
+        led_off = types.InlineKeyboardButton('/turn_led_off')
         markup.row(led_status)
         markup.row(led_on, led_off)
         bot.reply_to(message, "Turn on / off?", reply_markup=markup)
 
-    @bot.message_handler(commands=['turn-led-on'])
+    @bot.message_handler(commands=['turn_led_on'])
     def turn_on_led(message):
         """ Send to the pico-agent to turn on the led
         """
@@ -67,7 +67,7 @@ class TilaAgent(Agent):
             {"intent": "pico.led", "led": True, "chat": message.chat.id}
         ))
 
-    @bot.message_handler(commands=['turn-led-off'])
+    @bot.message_handler(commands=['turn_led_off'])
     def turn_off_led(message):
         """ Send to the pico-agent to turn off the led
         """
@@ -76,7 +76,7 @@ class TilaAgent(Agent):
             {"intent": "pico.led", "led": False, "chat": message.chat.id}
         ))
 
-    @bot.message_handler(commands=['get-led-status'])
+    @bot.message_handler(commands=['get_led_status'])
     def get_led_status(message):
         """ Request to the pico-agent the status of the led
         """
