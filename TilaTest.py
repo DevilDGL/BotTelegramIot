@@ -8,21 +8,6 @@ import time
 
 
 bot = telebot.TeleBot(json.loads(open("token.json").read())['token'], parse_mode='Markdown')
-comandos = {
-    'start': "Saluda al Usuario.",
-    'help': 'Emite la lista de comandos.',
-    "r <Numero de dados>d<Numero de caras> ": "Tira la cantidad de dados indicada de la cantidad de caras indicada.\nEjemplo:\n/r 3d6",
-    "led": "Enciende el led de la pico.",
-    "temperatura": "Devuelve ls temperatura leida por la pico."
-}
-
-serial_connected = 0
-if os.path.exists('COM3') == True:
-    import serial
-    ser = serial.Serial('COM3', 115200)
-    serial_connected = 1
-    time.sleep(3)
-
 encendido = False
 
 

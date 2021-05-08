@@ -6,17 +6,25 @@
 
 from telebot import types
 from zoe import *
+from threading import Thread
 
 import telebot
 import json
 
 
-@Agent('Tila')
-class MailAgent:
+# zoe-agent-tila/config.json for running in venv
+# code/config.json for running with docker
+bot = telebot.TeleBot(json.loads(open("./config.json").read())['token'], parse_mode='Markdown')
 
-    def __init__(self):
-        self.bot = telebot.TeleBot(json.loads(open("config.json").read())['token'], parse_mode='Markdown')
-        self.bot.polling()
+
+class TilaAgent(Agent):
+
+    def __init__(self, name):
+        super().__init__(name)
+        global bot
+        bot.zoe_broker = self.agent._listener
+        th = Thread(target=bot.polling)
+        th.start()
 
     @Intent("tila.read")
     def send_to_chat(self, intent):
@@ -27,61 +35,65 @@ class MailAgent:
                 "messsage": "message to send to the telegram chat"
             }
         """
-        self.bot.send_message(intent['chat'], intent['message'])
+        global bot
+        bot.send_message(intent['chat'], intent['message'])
 
     @bot.message_handler(commands=['start', 'help'])
-    def send_welcome(self, message):
+    def send_welcome(message):
         markup = types.ReplyKeyboardMarkup()
         led_but = types.InlineKeyboardButton('/led')
         temp_but = types.InlineKeyboardButton('/temperature')
         markup.row(led_but, temp_but)
-        self.bot.reply_to(message, f"Hola {message.from_user.first_name}", reply_markup=markup)
+        bot.reply_to(message, f"Hellou {message.from_user.first_name}", reply_markup=markup)
 
     @bot.message_handler(commands=['led'])
-    def led_options(self, message):
+    def led_options(message):
         """ Show commands related to the leds
         """
         markup = types.ReplyKeyboardMarkup()
         led_status = types.InlineKeyboardButton('/get-led-status')
-        led_on = types.InlineKeyboardButton('/turn-on-led')
-        led_off = types.InlineKeyboardButton('/turn-off-led')
+        led_on = types.InlineKeyboardButton('/turn-led-on')
+        led_off = types.InlineKeyboardButton('/turn-led-off')
         markup.row(led_status)
         markup.row(led_on, led_off)
-        self.bot.reply_to(message, "¿Encender o apagar?", reply_markup=markup)
-
+        bot.reply_to(message, "Turn on / off?", reply_markup=markup)
 
     @bot.message_handler(commands=['turn-led-on'])
-    def turn_on_led(self, message):
+    def turn_on_led(message):
         """ Send to the pico-agent to turn on the led
         """
-        self.bot.reply_to(message, "Led encendido")
-        self._listener.send(json.dumps(
+        bot.reply_to(message, "Led on")
+        bot.zoe_broker.send(json.dumps(
             {"intent": "pico.led", "led": True, "chat": message.chat.id}
         ))
 
     @bot.message_handler(commands=['turn-led-off'])
-    def turn_on_led(self, message):
+    def turn_off_led(message):
         """ Send to the pico-agent to turn off the led
         """
-        self.bot.reply_to(message, "Led apagado")
-        self._listener.send(json.dumps(
+        bot.reply_to(message, "Led off")
+        bot.zoe_broker.send(json.dumps(
             {"intent": "pico.led", "led": False, "chat": message.chat.id}
         ))
 
-    @bot.message_handler(commands=['led-status'])
-    def turn_on_led(self, message):
+    @bot.message_handler(commands=['get-led-status'])
+    def get_led_status(message):
         """ Request to the pico-agent the status of the led
         """
-        self.bot.reply_to(message, "Led encendido")
-        self._listener.send(json.dumps(
-            {"intent": "pico.led", "led": True, "chat": message.chat.id}
+        bot.reply_to(message, "Requesting led status")
+        bot.zoe_broker.send(json.dumps(
+            {"intent": "pico.get_led", "chat": message.chat.id}
         ))
 
     @bot.message_handler(commands=['temperature'])
-    def get_temp(self, message):
+    def get_temp(message):
         """ Request to the pico-agent the current temperature
         """
-        self.bot.reply_to(message, "Requesting temperature")
-        self._listener.send(json.dumps(
+        bot.reply_to(message, "Requesting temperature")
+        bot.zoe_broker.send(json.dumps(
             {"intent": "pico.get_temp", "chat": message.chat.id}
         ))
+
+if __name__ == "__main__":
+    tila = TilaAgent("Tila")
+    tila()

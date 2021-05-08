@@ -1,1 +1,3 @@
 git+https://github.com/guluc3m/zoe-lib-python.git
+pyTelegramBotAPI==3.7.7
+
