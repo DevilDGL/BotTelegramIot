@@ -29,7 +29,7 @@ class PicoAgent:
 
     @Intent("pico.led")
     def change_led(self, intent):
-        pdb.set_trace()
+        #pdb.set_trace()
 
         estado = intent["led"]
 
@@ -39,7 +39,7 @@ class PicoAgent:
 
     @Intent("pico.get_led")
     def get_led(self, intent):
-        pdb.set_trace()
+        #pdb.set_trace()
         ser.write(b"r\n")
 
         pico_data = ser.readline()
